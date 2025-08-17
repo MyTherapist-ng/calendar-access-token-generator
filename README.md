@@ -1,66 +1,87 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Calendar Access Token Generator
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A minimal Laravel 9 application that emulates the Google Calendar API "quickstart" flow.
+Use it to obtain OAuth credentials (`client_secret_generated.json`) compatible with the [`spatie/laravel-google-calendar`](https://github.com/spatie/laravel-google-calendar) package.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Purpose
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Many Laravel projects rely on **offline access tokens** to interact with Google Calendar through Spatie’s package.
+This repository walks you through that OAuth process in isolation, generating the token files you can later drop into your main application.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## How It Works
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. **Calendar service wrapper** (`app/Calendar.php`) configures a `Google_Client` with the desired scopes (`calendar` and `calendar.events`) and reads `client_secret.json` from `storage/keys/`.
+2. **Route `/connect`**: initiates the OAuth consent screen by redirecting the user to Google’s authorization URL.
+3. **Route `/store`**: receives the `code` from Google, exchanges it for an access & refresh token, and writes the resulting JSON to `storage/keys/client_secret_generated.json`.
+4. The generated token file is ready to be used by `spatie/laravel-google-calendar` in any Laravel application.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Getting Started
 
-## Laravel Sponsors
+### Prerequisites
+- PHP ≥ 8.0.2
+- Composer
+- A Google Cloud project with Calendar API enabled
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### Installation
+```
+git clone https://github.com/your-user/calendar-access-token.git
+cd calendar-access-token
+composer install
+cp .env.example .env   # adjust APP_NAME, etc. as needed
+```
 
-### Premium Partners
+### Set Up Google OAuth Credentials
+1. In the Google Cloud Console, create an **OAuth client ID** (type: Web application).
+2. Add `http://127.0.0.1:8006/store` to the authorized redirect URIs.
+3. Download the JSON credentials and save them as  `storage/keys/client_secret.json` in this project.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+### Run the Authorization Flow
+```
+php artisan serve --port=8006
+```
 
-## Contributing
+1. Visit `http://127.0.0.1:8006/connect`.
+2. Sign in with your Google account and grant calendar access.
+3. Google redirects back to `/store`, which writes `storage/keys/client_secret_generated.json` (contains `access_token`, `refresh_token`, etc.).
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Using the Generated Credentials
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+In your main Laravel project that uses `spatie/laravel-google-calendar`:
 
-## Security Vulnerabilities
+1. Copy both `client_secret.json` and `client_secret_generated.json` to an accessible location (often `storage/` or `config/`).
+2. Reference the path in your Spatie config (`config/google-calendar.php`):
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```php
+'credentials_json' => storage_path('keys/client_secret.json'),
+'token_json'       => storage_path('keys/client_secret_generated.json'),
+```
+
+Now the package can authenticate without prompting again.
+
+---
+
+## Security Notes
+- **Never commit** `client_secret.json` or the generated token file to version control.
+- Store them securely and rotate them if compromised.
+
+---
+
+## Troubleshooting
+
+- **Invalid redirect_uri**: Ensure the URI in Google Cloud matches the one used locally (`/store`).
+- **Expired token**: rerun the flow (`/connect`) to refresh the credentials.
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced under the [MIT license](LICENSE).
+
