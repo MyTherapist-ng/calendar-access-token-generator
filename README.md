@@ -1,4 +1,4 @@
-# Calendar Access Token Generator
+# Google Calendar Access Token Generator
 
 A minimal Laravel 9 application that emulates the Google Calendar API "quickstart" flow.
 Use it to obtain OAuth credentials (`client_secret_generated.json`) compatible with the [`spatie/laravel-google-calendar`](https://github.com/spatie/laravel-google-calendar) package.
@@ -33,7 +33,7 @@ After wrestling with the setup, we open-sourced the code so others facing simila
 
 ### Installation
 ```
-git clone https://github.com/your-user/calendar-access-token.git
+git clone https://github.com/Mytherapist-ng/calendar-access-token.git
 cd calendar-access-token
 composer install
 cp .env.example .env   # adjust APP_NAME, etc. as needed
