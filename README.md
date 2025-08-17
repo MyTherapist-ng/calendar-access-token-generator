@@ -10,6 +10,9 @@ Use it to obtain OAuth credentials (`client_secret_generated.json`) compatible w
 Many Laravel projects rely on **offline access tokens** to interact with Google Calendar through Spatie’s package.
 This repository walks you through that OAuth process in isolation, generating the token files you can later drop into your main application.
 
+It grew out of our attempts at [Mytherapist.ng](https://mytherapist.ng) to hook up Google Calendar.
+After wrestling with the setup, we open-sourced the code so others facing similar hurdles can reuse it.
+
 ---
 
 ## How It Works
@@ -78,6 +81,13 @@ Now the package can authenticate without prompting again.
 
 - **Invalid redirect_uri**: Ensure the URI in Google Cloud matches the one used locally (`/store`).
 - **Expired token**: rerun the flow (`/connect`) to refresh the credentials.
+
+---
+
+## Contributors
+
+- [@Mane-Olawale](https://github.com/Mane-Olawale) – code
+- [@theafolayan](https://github.com/theafolayan) – docs
 
 ---
 
