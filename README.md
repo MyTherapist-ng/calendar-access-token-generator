@@ -33,7 +33,7 @@ After wrestling with the setup, we open-sourced the code so others facing simila
 
 ### Installation
 ```
-git clone https://github.com/Mytherapist-ng/calendar-access-token.git
+git clone https://github.com/Mytherapist-ng/calendar-access-token-generator.git
 cd calendar-access-token
 composer install
 cp .env.example .env   # adjust APP_NAME, etc. as needed
